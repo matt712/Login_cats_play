@@ -12,7 +12,12 @@ class Application @Inject()(val messagesApi: MessagesApi, environment: play.api.
     Ok(views.html.index("Bad login"))
   }
   def listCats() = Action {implicit request =>
-    Ok(views.html.listCats(Cats.catsList, Cats.createCatsForm))
+    if(request.session.get("login").getOrElse("false") == "true") {
+      Ok(views.html.listCats(Cats.catsList, Cats.createCatsForm))
+    }
+    else{
+    Redirect("/login")
+    }
   }
   def createCats() = Action {implicit  request =>
     val formValidationResult = Cats.createCatsForm.bindFromRequest
@@ -32,10 +37,10 @@ class Application @Inject()(val messagesApi: MessagesApi, environment: play.api.
       BadRequest(views.html.login(formWithErrors))
     }, { login =>
       if(Login.validLogins.contains(login)) {
-        Redirect("/cats")
+        Redirect("/cats").withSession("login" -> "true")
       }
       else{
-        Redirect(routes.Application.index())
+        Redirect("/cats")
       }
     })
   }
